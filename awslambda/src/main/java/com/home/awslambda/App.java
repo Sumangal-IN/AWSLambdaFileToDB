@@ -23,10 +23,15 @@ import com.amazonaws.services.s3.model.S3Object;
 public class App implements RequestHandler<S3Event, String> {
 
 	public String handleRequest(S3Event s3event, Context context) {
+
 		try {
+			System.out.println(s3event.getRecords().size());
 			S3EventNotificationRecord record = s3event.getRecords().get(0);
+
 			String bucket = record.getS3().getBucket().getName();
+			System.out.println("bucket" + bucket);
 			String bucketKey = record.getS3().getObject().getKey().replace('+', ' ');
+			System.out.println("key" + record.getS3().getObject().getKey());
 			bucketKey = URLDecoder.decode(bucketKey, "UTF-8");
 			AmazonS3 s3Client = AmazonS3ClientBuilder.standard().build();
 			S3Object s3Object = s3Client.getObject(new GetObjectRequest(bucket, bucketKey));
@@ -38,6 +43,7 @@ public class App implements RequestHandler<S3Event, String> {
 			csvParser.getRecords().stream().forEach(r -> {
 				HttpURLConnection conn = null;
 				try {
+					System.out.println(String.format("https://load-app.herokuapp.com/records/%s/%s", r.get(0), r.get(1)));
 					conn = (HttpURLConnection) new URL(
 							String.format("https://load-app.herokuapp.com/records/%s/%s", r.get(0), r.get(1)))
 									.openConnection();
@@ -55,5 +61,7 @@ public class App implements RequestHandler<S3Event, String> {
 			e.printStackTrace();
 			return "Failed";
 		}
+
 	}
+
 }
